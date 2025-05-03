@@ -106,29 +106,53 @@ st.set_page_config(page_title="Interfaith Chatbot", layout="wide")
 st.title("🤖 Interfaith Chatbot: Faith & Money in a Secular World")
 
 st.markdown("""
-This chatbot helps you explore how different religions view **money, wealth, and ethical living** in today's secular society. It's powered by a custom knowledge base of religious texts, expert commentary, and real-world stories, and gives **source-backed, religion-specific answers**.
+Welcome to the **🤖 Interfaith Chatbot: Faith & Money in a Secular World** — a user-friendly AI assistant that helps you explore what different religions say about **money, ethics, work, and wealth** in today’s world.
+
+This chatbot is created for learners, seekers, and anyone interested in how spiritual traditions guide financial and ethical decisions. It draws on a carefully selected set of religious teachings, expert insights, and real-world examples across **Christianity, Islam, Judaism, Hinduism, and Buddhism**.
+
+Unlike generic chatbots, this app has been trained on a **custom knowledge base** of high-quality sources. That means it’s not just guessing — it gives meaningful, faith-based answers because the right material was fed directly into its memory.
 
 ---
 
-### 🧭 How to Use This Chatbot
-1. Navigate through the tabs to explore different features.
-2. Select a religion or view all.
-3. Type your question or select a prompt.
-4. Press **Submit** to see your answer with citations.
+### 🌍 What This Chatbot Does
+- Answers your questions with insights from real religious texts and commentary
+- Lets you focus on a single religion or compare across multiple faiths
+- Explains how money, charity, wealth, and ethical living are seen in each tradition
+- Provides easy-to-read answers with **citations** linked to original sources
+
+---
+
+### ✨ How to Use It
+1. Choose a **tab** based on what kind of help or answer you’re looking for.
+2. Pick a **religion** or select **All** to compare across traditions.
+3. Ask a question about **money, faith, ethics, or real-life dilemmas**.
+4. Click **Submit** to get an answer backed by real sources.
+5. Turn on **“Show full sources”** to view references used in your answer.
+
+---
+
+💬 You can also scroll down in any tab to see your **Session History** — the questions you’ve asked and the answers you’ve received.
+
+Try it out and discover how faith and money connect in meaningful, thoughtful ways!
 """)
 
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
+# Tabs setup
 tabs = st.tabs(["Ask a Question", "Tension Explorer", "Ethics Coach", "Interfaith Harmony", "Guided Exploration"])
 tab_names = ["Ask a Question", "Tension Explorer", "Ethics Coach", "Interfaith Harmony", "Guided Exploration"]
 
 instructions = {
-    "Ask a Question": "Use this tab to ask any open-ended question about wealth, ethics, or lifestyle choices. Get a response grounded in teachings from your selected religion, or compare across all faiths.",
-    "Tension Explorer": "Explore real-life dilemmas people face when religious teachings meet modern economic realities.",
-    "Ethics Coach": "Ask direct 'What should I do?' questions and receive thoughtful perspectives based on moral guidance.",
-    "Interfaith Harmony": "See what different religions share in common around money, charity, and justice.",
-    "Guided Exploration": "Take a journey through topics like 'Ethics at Work' or 'Faithful Finance'."
+    "Ask a Question": "Use this tab to ask any **open-ended question** about money, ethics, or economic life. You can explore a single religion or compare all.\n\n**Purpose:** General exploration of faith teachings.\n**Example:** 'What does Buddhism say about property ownership?'",
+
+    "Tension Explorer": "Use this tab to describe a **real-world dilemma** where faith meets financial or modern pressure.\n\n**Purpose:** Discover how different religions guide followers in tough situations.\n**Example:** 'Is it okay to earn bonuses from alcohol sales if I’m Hindu?'",
+
+    "Ethics Coach": "Ask personal or moral questions like 'What should I do?' and receive thoughtful advice.\n\n**Purpose:** Get ethical and introspective support, not just doctrine.\n**Example:** 'I feel guilty about being rich — what would a Christian response be?'",
+
+    "Interfaith Harmony": "Compare how various religions treat common financial themes.\n\n**Purpose:** Promote empathy by surfacing **shared values** across traditions.\n**Example:** 'Do all religions promote giving to the poor?'",
+
+    "Guided Exploration": "Choose from prewritten learning journeys on topics like **'Ethics at Work'**, **'Charity & Simplicity'**, and more.\n\n**Purpose:** Structured learning with suggested questions and reflection prompts.\n**Example:** 'Walk through how religious values affect budgeting and generosity.'"
 }
 
 for i, tab in enumerate(tabs):
