@@ -1,18 +1,14 @@
-import os
-import uuid
 import requests
 import streamlit as st
-from dotenv import load_dotenv
 from pinecone import Pinecone
 from langchain_huggingface import HuggingFaceEndpoint
 
 # -------------------------
 # Load environment variables
 # -------------------------
-load_dotenv()
-PINECONE_API_KEY = os.getenv("PINECONE")
-PINECONE_ENV = os.getenv("PINECONE_ENVIRONMENT")
-HF_API_TOKEN = os.getenv("HUGGING")
+PINECONE_API_KEY = st.secrets["PINECONE"]
+PINECONE_ENV = st.secrets["PINECONE_ENVIRONMENT"]
+HF_API_TOKEN = st.secrets["HUGGING"]
 
 # -------------------------
 # Initialize Pinecone
