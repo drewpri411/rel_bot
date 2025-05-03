@@ -1,17 +1,17 @@
 import os
 import uuid
-import time
 import requests
 import streamlit as st
 from dotenv import load_dotenv
-from pinecone import Pinecone, ServerlessSpec
+from pinecone import Pinecone
+from langchain_huggingface import HuggingFaceEndpoint
 
 # -------------------------
 # Load environment variables
 # -------------------------
 load_dotenv()
 PINECONE_API_KEY = os.getenv("PINECONE")
-PINECONE_ENV = os.getenv("PINECONE_ENVIRONMENT")  # not used directly, but fine to keep
+PINECONE_ENV = os.getenv("PINECONE_ENVIRONMENT")
 HF_API_TOKEN = os.getenv("HUGGING")
 
 # -------------------------
@@ -21,21 +21,43 @@ pc = Pinecone(api_key=PINECONE_API_KEY)
 index = pc.Index("relbot")
 namespace = "religion-views"
 
+# -------------------------
+# Hugging Face Embedding API config
+# -------------------------
+HF_EMBED_URL = "https://api-inference.huggingface.co/pipeline/feature-extraction/sentence-transformers/all-MiniLM-L6-v2"
+HF_HEADERS = {"Authorization": f"Bearer {HF_API_TOKEN}"}
 
 # -------------------------
-# Hugging Face API config
+# Initialize HuggingFace LLM via LangChain
 # -------------------------
-HF_API_URL = "https://api-inference.huggingface.co/pipeline/feature-extraction/sentence-transformers/all-MiniLM-L6-v2"
-HF_HEADERS = {"Authorization": f"Bearer {HF_API_TOKEN}"}
+# LangChain LLM
+llm = HuggingFaceEndpoint(
+    repo_id="mistralai/Mixtral-8x7B-Instruct-v0.1",
+    task="text-generation",
+    huggingfacehub_api_token=HF_API_TOKEN,
+    max_new_tokens=400,
+    temperature=0.7
+)
+
+# -------------------------
+# Mode-specific instructions
+# -------------------------
+def get_prompt_instructions(mode):
+    return {
+        "Ask a Question": "You are a helpful assistant knowledgeable about religious teachings.\nAnswer the question using only the context below with inline citations.",
+        "Tension Explorer": "You are a religious advisor helping people resolve real-world moral tensions. Use the context below to offer faith-based insight.",
+        "Ethics Coach": "You are an ethics coach offering value-based advice. Use the religious context to reflect on the user's personal dilemma.",
+        "Interfaith Harmony": "You are comparing religious perspectives. Use the context to summarize similarities and differences across faiths.",
+        "Guided Exploration": "You are an educational guide. Use the context to teach structured insights on the topic and offer reflection points."
+    }.get(mode, "You are a helpful assistant. Use the context to answer the question.")
 
 # -------------------------
 # Embed using HF API
 # -------------------------
 def get_hf_embedding(text):
-    response = requests.post(HF_API_URL, headers=HF_HEADERS, json={"inputs": text})
+    response = requests.post(HF_EMBED_URL, headers=HF_HEADERS, json={"inputs": text})
     if response.status_code == 200:
         embedding = response.json()
-        # Flatten if nested
         if isinstance(embedding, list) and isinstance(embedding[0], list):
             return embedding[0]
         return embedding
@@ -47,9 +69,7 @@ def get_hf_embedding(text):
 # Helper functions
 # -------------------------
 def retrieve_relevant_chunks(query_embedding, religion_filter=None, top_k=5):
-    filter = {}
-    if religion_filter and religion_filter != "All":
-        filter = {"religion": {"$eq": religion_filter}}
+    filter = {"religion": {"$eq": religion_filter}} if religion_filter and religion_filter != "All" else {}
     results = index.query(
         vector=query_embedding,
         top_k=top_k,
@@ -59,35 +79,25 @@ def retrieve_relevant_chunks(query_embedding, religion_filter=None, top_k=5):
     )
     return results.matches
 
-def build_prompt(user_question, retrieved_chunks):
+def build_prompt(user_question, retrieved_chunks, mode):
     context_texts = []
-    for match in retrieved_chunks:
+    citation_map = {}
+    for i, match in enumerate(retrieved_chunks):
+        idx = i + 1
         title = match.metadata.get("source_title", "Unknown Source")
+        url = match.metadata.get("source_url", "")
         text = match.metadata.get("text", "")
-        context_texts.append(f"{title}: {text}")
+        context_texts.append(f"[{idx}] {text}")
+        citation_map[str(idx)] = f"{title} ({url})"
     context_str = "\n\n".join(context_texts)
+    instruction = get_prompt_instructions(mode)
     prompt = (
-        "You are a helpful assistant knowledgeable about religious teachings.\n"
+        f"{instruction}\n\n"
         f"Context:\n{context_str}\n\n"
         f"Question: {user_question}\n"
-        "Answer in detail, drawing only from the context. "
-        "Provide inline citations using the source titles for each fact."
+        "Answer in detail, citing sources using [1], [2], etc. Inline citations only from context."
     )
-    return prompt
-
-def generate_answer_from_llm(prompt):
-    payload = {
-        "inputs": prompt,
-        "parameters": {"max_new_tokens": 256, "temperature": 0.7}
-    }
-    resp = requests.post(HF_API_URL.replace("feature-extraction", "text-generation"), headers=HF_HEADERS, json=payload)
-    try:
-        result = resp.json()
-        if isinstance(result, list):
-            return result[0].get("generated_text", "")
-        return result.get("generated_text", result)
-    except:
-        return "Error generating answer."
+    return prompt, citation_map
 
 # -------------------------
 # Streamlit App
@@ -99,6 +109,7 @@ st.markdown("""
 This chatbot helps you explore how different religions view **money, wealth, and ethical living** in today's secular society. It's powered by a custom knowledge base of religious texts, expert commentary, and real-world stories, and gives **source-backed, religion-specific answers**.
 
 ---
+
 ### 🧭 How to Use This Chatbot
 1. Navigate through the tabs to explore different features.
 2. Select a religion or view all.
@@ -109,7 +120,6 @@ This chatbot helps you explore how different religions view **money, wealth, and
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
-# Tab setup
 tabs = st.tabs(["Ask a Question", "Tension Explorer", "Ethics Coach", "Interfaith Harmony", "Guided Exploration"])
 tab_names = ["Ask a Question", "Tension Explorer", "Ethics Coach", "Interfaith Harmony", "Guided Exploration"]
 
@@ -133,8 +143,9 @@ for i, tab in enumerate(tabs):
             embed = get_hf_embedding(question)
             if embed:
                 matches = retrieve_relevant_chunks(embed, religion_filter=religion)
-                prompt = build_prompt(question, matches)
-                answer = generate_answer_from_llm(prompt)
+                prompt, citation_map = build_prompt(question, matches, tab_names[i])
+                answer = llm.invoke(prompt)
+                answer = answer.content if hasattr(answer, "content") else answer
 
                 st.markdown("### Answer:")
                 st.write(answer)
@@ -142,10 +153,8 @@ for i, tab in enumerate(tabs):
                 if show_sources:
                     st.markdown("---")
                     st.markdown("**Sources:**")
-                    for match in matches:
-                        title = match.metadata.get("source_title", "Unknown Source")
-                        url = match.metadata.get("source_url", "")
-                        st.markdown(f"- *{title}* – [{url}]({url})")
+                    for idx, source in citation_map.items():
+                        st.markdown(f"[{idx}]: {source}")
 
                 st.session_state.chat_history.append({
                     "tab": tab_names[i],
