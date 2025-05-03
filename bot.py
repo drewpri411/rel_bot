@@ -106,8 +106,8 @@ st.markdown("""
 ### 📘 Project Details
 
 **Project Title:** *Interfaith Chatbot: Faith & Money in a Secular World*  
-**Course:** REL 24000 – *Engaging Religious Diversity in the Public Sphere*  
-**Assignment:** Final Project (10%)  
+**Course:** REL 24000: Engaging Religious Diversity @ Purdue University
+**Assignment:** Final Project (Engaging Religious Diversity in the Public Sphere)  
 **Name:** Andrew Prince  
 **PUID:** 00038537784  
 
