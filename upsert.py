@@ -59,12 +59,14 @@ for doc in documents:
     metadata = {
         "religion": doc["religion"],
         "topic": doc["topic"],
+        "text": doc["text"],  # 👈 ADD THIS LINE
         "source_title": doc.get("source_title", ""),
         "source_citation": doc.get("source_citation", ""),
         "source_type": doc.get("source_type", ""),
         "source_url": doc.get("source_url", ""),
         "year": doc.get("year", "")
     }
+
 
     vectors.append({
         "id": vector_id,
