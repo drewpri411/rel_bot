@@ -102,6 +102,18 @@ st.set_page_config(page_title="Interfaith Chatbot", layout="wide")
 st.title("🤖 Interfaith Chatbot: Faith & Money in a Secular World")
 
 st.markdown("""
+---
+### 📘 Project Details
+
+**Project Title:** *Interfaith Chatbot: Faith & Money in a Secular World*  
+**Course:** REL 24000 – *Engaging Religious Diversity in the Public Sphere*  
+**Assignment:** Final Project (10%)  
+**Name:** Andrew Prince  
+**PUID:** 00038537784  
+
+This chatbot serves as a final reflective project that explores how religious diversity can help address real-world questions about money, ethics, and work in a secular world. The chatbot presents thoughtful responses grounded in the values and practices of five major religions.
+
+---
 Welcome to the **🤖 Interfaith Chatbot: Faith & Money in a Secular World** — a user-friendly AI assistant that helps you explore what different religions say about **money, ethics, work, and wealth** in today’s world.
 
 This chatbot is created for learners, seekers, and anyone interested in how spiritual traditions guide financial and ethical decisions. It draws on a carefully selected set of religious teachings, expert insights, and real-world examples across **Christianity, Islam, Judaism, Hinduism, and Buddhism**.
